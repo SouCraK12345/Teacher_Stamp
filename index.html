@@ -1,1 +1,290 @@
+<html lang="ja">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スタンプ</title>
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            /* 2列 */
+            gap: 16px;
+            padding: 20px;
+            max-width: 250px;
+            margin: auto;
+        }
+
+        div.description {
+            max-width: 250px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        h2.description {
+            text-align: center;
+            width: 100%;
+        }
+
+        .card {
+            height: 150px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ダイアログの初期状態 */
+        #myDialog {
+            padding: 20px;
+            border: none;
+            border-radius: 8px;
+            width: 300px;
+            background-color: #fff;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        /* ダイアログが表示されたとき */
+        #myDialog.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            visibility: visible;
+        }
+
+        img.stamp_get {
+            border: 2px solid rgb(126, 126, 126);
+            border-radius: 5px;
+            width: 280px;
+            margin: 10px;
+        }
+
+        h2.stamp_get {
+            text-align: center;
+            width: 100%;
+        }
+
+        .button_normal {
+            background-color: #4CAF50;
+            /* 緑 */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+            width: 100%;
+        }
+
+        .button_normal:hover {
+            background-color: #45a049;
+        }
+
+        canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="stamp_chosing">
+        <div class="description">
+            <h2 class="description">背景と同じ色のカードをえらべ!</h2>
+        </div>
+        <div id="myDialog">
+            <h2 class="stamp_get"></h2>
+            <img class="stamp_get">
+            <button class="button_normal" onclick="display_change()">閉じる</button>
+        </div>
+        <label class="color" hidden></label>
+        <div class="grid-container">
+            <button class="card" style="background-color: rgba(255, 204, 204, 1);"
+                onclick="card_clicked('red')"></button>
+            <button class="card" style="background-color: rgba(255, 255, 204, 1);"
+                onclick="card_clicked('yellow')"></button>
+            <button class="card" style="background-color: rgba(204, 204, 255, 1);"
+                onclick="card_clicked('blue')"></button>
+            <button class="card" style="background-color: rgba(204, 255, 204, 1);"
+                onclick="card_clicked('green')"></button>
+        </div>
+    </div>
+    <div class="description2" style="display:none;">
+        <h2 class="description">スタンプを押せ!</h2>
+    </div>
+    <canvas id="myCanvas" width="400" height="400"></canvas>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    <script>
+        function display_change() {
+            $('#stamp_chosing').fadeOut(500);
+            setTimeout(draw, 1000); // 最初の描画を呼び出し
+        }
+        function card_clicked(color) {
+            if (!pushed) {
+                clearInterval(intervalId)
+                try {
+                    if (color == class_index[document.querySelector("label.color").innerHTML]) {
+                        document.querySelector("h2.stamp_get").innerHTML = "スタンプゲット!"
+                        document.querySelector("img.stamp_get").src = "比楽先生顔.png"
+                    } else {
+                        document.querySelector("h2.stamp_get").innerHTML = "残念!"
+                        document.querySelector("img.stamp_get").src = "残念.png"
+                    }
+                    document.querySelector("img.stamp_get").onload = function () {
+                        myDialog.classList.add('show');
+                        hako.play()
+                    }
+                } catch (e) { alert(e) }
+                pushed = true
+            }
+        }
+        let pushed = false;
+        const class_index = [
+            "red", "yellow", "blue", "green"
+        ]
+        const colors = [
+            'rgba(255, 204, 204, 1)',
+            'rgba(255, 255, 204, 1)',
+            'rgba(204, 204, 255, 1)',
+            'rgba(204, 255, 204, 1)'
+        ];
+        let index = 0;
+        const box = document.querySelector('.grid-container');
+        const myDialog = document.getElementById('myDialog');
+
+
+        let intervalId = setInterval(() => {
+            lastIndex = index
+            while (index == lastIndex) {
+                index = Math.floor(Math.random() * 4);
+                document.querySelector("label.color").innerHTML = index
+            }
+            box.style.backgroundColor = colors[index];
+        }, 450); // 0.45秒ごと
+
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const hanko = new Audio('投げハンコワイプアウト付き.wav');
+        const hako = new Audio('ブレワイ 宝箱 音.wav');
+        const lineLength = 400; // 線の長さ
+        const maxSpeed = 5; // 最大スピード
+        const lineStarts = [100, 200, 300]; // 各線のY座標
+        let isAbleToStamp = false;
+        let stamp = { "x": 0, "y": 0, "rotate": 0, "frame": 0 }
+        let x = [0, 0, 0]; // 3本の線のX座標（進行する位置）
+        let speeds = [maxSpeed, maxSpeed, maxSpeed]; // 3本の線の速度
+        let startTimes = [2000, 2100, 2200]; // 各線の描画開始時間（0.2秒ごと）
+
+        // スムージング設定
+        ctx.lineWidth = 5; // 線の太さ
+        ctx.lineJoin = 'round'; // 角を丸く
+        ctx.lineCap = 'round'; // 線の終わりを丸く
+
+        // ease-out関数 (終点でスピードを減速)
+        function easeOut(t, b, c, d) {
+            let time = t / d;
+            return c * (1 - Math.pow(1 - time, 3)) + b;
+        }
+
+        function easeIn(t, start, end) {
+            const easedT = t * t * t; // ease-in（加速）
+            return start + (end - start) * easedT;
+        }
+
+        // アニメーションの描画
+        function draw(timestamp) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // 前のフレームを消去
+            document.querySelector("canvas").style.display = "block"
+            document.querySelector("div.description2").style.display = "block"
+
+            for (let i = 0; i < lineStarts.length; i++) {
+                // 各線の描画開始時間をずらす
+                if (timestamp < startTimes[i]) {
+                    continue; // 描画開始時間になっていなければスキップ
+                }
+
+                // 終点でスピードが減速する
+                let easedX = easeOut(x[i], 0, lineLength, lineLength);
+
+                // 描画
+                ctx.beginPath();
+                ctx.moveTo(0, lineStarts[i]); // 開始位置
+                ctx.lineTo(easedX, lineStarts[i]); // 終了位置（スムージングを適用）
+                ctx.moveTo(lineStarts[i], 0); // 開始位置
+                ctx.lineTo(lineStarts[i], easedX); // 終了位置（スムージングを適用）
+                ctx.stroke();
+
+                // 各線の進行度を更新
+                x[i] += speeds[i]; // 各線の進行
+
+                // 終了条件
+                if (x[i] > lineLength) {
+                    x[i] = lineLength; // 終点で停止
+                }
+            }
+
+            // すべての線が終点に達するまでアニメーションを続ける
+            if (x[2] < lineLength) {
+                requestAnimationFrame(draw); // アニメーションを続ける
+            } else {
+                if (stamp.frame == 0) {
+                    isAbleToStamp = true;
+                }
+            }
+        }
+        function draw2() {
+            draw();
+            ctx.save(); // 現在の状態を保存
+            if (stamp.x > 200) {
+                ctx.translate(stamp.x + easeIn((stamp.frame) / 60, -200, 0), stamp.y - (stamp.frame - 60) * 10);       // (x, y)に原点を移動
+            } else {
+                ctx.translate(stamp.x + easeIn((stamp.frame) / 60, 200, 0), stamp.y - (stamp.frame - 60) * 10);       // (x, y)に原点を移動
+
+            }
+            ctx.rotate(stamp.rotate);         // 回転
+            ctx.drawImage(document.querySelector("img.stamp_get"), -50, -50, 100, 100); // 中心を合わせて描画
+            ctx.restore()
+            stamp.rotate += 48 * Math.PI / 180;
+            stamp.frame++;
+            if (stamp.frame != 61) {
+                requestAnimationFrame(draw2); // アニメーションを続ける
+            }
+        }
+        function convertToNaturalNumber(value) {
+            if (value < 0 || value > 400) {
+                throw new Error("値は0から400の間である必要があります");
+            }
+
+            // 100ごとに分けて 1〜4 に変換
+            return Math.floor(value / 100);
+        }
+        canvas.addEventListener('click', (event) => {
+            try {
+                if (isAbleToStamp) {
+                    const rect = canvas.getBoundingClientRect(); // canvasの位置とサイズ
+                    stamp.x = convertToNaturalNumber(event.clientX - rect.left) * 100 + 50;
+                    stamp.y = convertToNaturalNumber(event.clientY - rect.top) * 100 + 50;
+                    hanko.play()
+                    isAbleToStamp = false;
+                    requestAnimationFrame(draw2); // アニメーションを続ける
+                }
+            } catch (e) { alert(e) }
+        });
+    </script>
+</body>
+
+</html>
