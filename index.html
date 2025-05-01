@@ -98,7 +98,9 @@
             display: none;
         }
     </style>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
+
 
 <body>
     <div id="stamp_chosing">
@@ -126,7 +128,7 @@
         <h2 class="description">スタンプを押せ!</h2>
     </div>
     <canvas id="myCanvas" width="400" height="400"></canvas>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         function display_change() {
             $('#stamp_chosing').fadeOut(500);
@@ -134,14 +136,15 @@
         }
         function card_clicked(color) {
             if (!pushed) {
+                color_ = color
                 clearInterval(intervalId)
                 try {
                     if (color == class_index[document.querySelector("label.color").innerHTML]) {
                         document.querySelector("h2.stamp_get").innerHTML = "スタンプゲット!"
-                        document.querySelector("img.stamp_get").src = "比楽先生顔.png"
+                        document.querySelector("img.stamp_get").src = `${teacher_name}/${parseInt(document.querySelector('label.color').innerHTML) + 1}.png`
                     } else {
                         document.querySelector("h2.stamp_get").innerHTML = "残念!"
-                        document.querySelector("img.stamp_get").src = "田中顔.png"
+                        document.querySelector("img.stamp_get").src = `${teacher_name}/5.png`
                     }
                     document.querySelector("img.stamp_get").onload = function () {
                         myDialog.classList.add('show');
@@ -151,6 +154,7 @@
                 pushed = true
             }
         }
+        let teacher_name = "noda";
         let pushed = false;
         const class_index = [
             "red", "yellow", "blue", "green"
@@ -162,6 +166,7 @@
             'rgba(204, 255, 204, 1)'
         ];
         let index = 0;
+        let color_ = null;
         const box = document.querySelector('.grid-container');
         const myDialog = document.getElementById('myDialog');
 
@@ -183,6 +188,7 @@
         const lineLength = 400; // 線の長さ
         const maxSpeed = 5; // 最大スピード
         const lineStarts = [100, 200, 300]; // 各線のY座標
+        let NotStamped = true;
         let isAbleToStamp = false;
         let stamp = { "x": 0, "y": 0, "rotate": 0, "frame": 0 }
         let x = [0, 0, 0]; // 3本の線のX座標（進行する位置）
@@ -193,6 +199,23 @@
         ctx.lineWidth = 5; // 線の太さ
         ctx.lineJoin = 'round'; // 角を丸く
         ctx.lineCap = 'round'; // 線の終わりを丸く
+        function drawImageFitAt(image, x, y, maxWidth, maxHeight) {
+            const iw = image.width;
+            const ih = image.height;
+
+            // スケーリング比（幅・高さの小さい方）
+            const scale = Math.min(maxWidth / iw, maxHeight / ih);
+
+            const drawWidth = iw * scale;
+            const drawHeight = ih * scale;
+
+            // 描画開始位置（指定範囲内で中央に配置）
+            const dx = x + (maxWidth - drawWidth) / 2;
+            const dy = y + (maxHeight - drawHeight) / 2;
+
+            ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+        }
+
 
         // ease-out関数 (終点でスピードを減速)
         function easeOut(t, b, c, d) {
@@ -248,19 +271,39 @@
         }
         function draw2() {
             draw();
-            ctx.save(); // 現在の状態を保存
-            if (stamp.x > 200) {
-                ctx.translate(stamp.x + easeIn((stamp.frame) / 60, -200, 0), stamp.y - (stamp.frame - 60) * 10);       // (x, y)に原点を移動
-            } else {
-                ctx.translate(stamp.x + easeIn((stamp.frame) / 60, 200, 0), stamp.y - (stamp.frame - 60) * 10);       // (x, y)に原点を移動
+            if (stamp.frame < 60) {
+                ctx.save(); // 現在の状態を保存
+                if (stamp.x > 200) {
+                    ctx.translate(stamp.x + easeIn((stamp.frame) / 60, -200, 0), stamp.y - (stamp.frame - 60) * 10);       // (x, y)に原点を移動
+                } else {
+                    ctx.translate(stamp.x + easeIn((stamp.frame) / 60, 200, 0), stamp.y - (stamp.frame - 60) * 10);       // (x, y)に原点を移動
 
+                }
+                ctx.rotate(stamp.rotate);         // 回転
+                drawImageFitAt(document.querySelector("img.stamp_get"), -50, -50, 100, 100); // 中心を合わせて描画
+                ctx.restore()
+                stamp.rotate += 48 * Math.PI / 180;
+            } else {
+                if (class_index[document.querySelector("label.color").innerHTML] == "red") {
+                    ctx.fillStyle = `rgba(255, 0, 0, ${(stamp.frame - 60)/120})`;
+                }
+                if (class_index[document.querySelector("label.color").innerHTML] == "green") {
+                    ctx.fillStyle = `rgba(0, 255, 0, ${(stamp.frame - 60)/120})`;
+                }
+                if (class_index[document.querySelector("label.color").innerHTML] == "blue") {
+                    ctx.fillStyle = `rgba(0, 0, 255, ${(stamp.frame - 60)/120})`;
+                }
+                if (class_index[document.querySelector("label.color").innerHTML] == "yellow") {
+                    ctx.fillStyle = `rgba(255, 255, 0, ${(stamp.frame - 60)/120})`;
+                }
+                if(color_ != class_index[document.querySelector("label.color").innerHTML]){
+                    ctx.fillStyle = `rgba(0, 0, 0, ${(stamp.frame - 60)/90})`;
+                }
+                ctx.fillRect(stamp.x - 50, stamp.y - 50, 100, 100);
+                drawImageFitAt(document.querySelector("img.stamp_get"), stamp.x - 50, stamp.y - 50, 100, 100); // 中心を合わせて描画
             }
-            ctx.rotate(stamp.rotate);         // 回転
-            ctx.drawImage(document.querySelector("img.stamp_get"), -50, -50, 100, 100); // 中心を合わせて描画
-            ctx.restore()
-            stamp.rotate += 48 * Math.PI / 180;
             stamp.frame++;
-            if (stamp.frame != 61) {
+            if (stamp.frame < 91) {
                 requestAnimationFrame(draw2); // アニメーションを続ける
             }
         }
@@ -274,12 +317,12 @@
         }
         canvas.addEventListener('click', (event) => {
             try {
-                if (isAbleToStamp) {
+                if (isAbleToStamp && NotStamped) {
                     const rect = canvas.getBoundingClientRect(); // canvasの位置とサイズ
                     stamp.x = convertToNaturalNumber(event.clientX - rect.left) * 100 + 50;
                     stamp.y = convertToNaturalNumber(event.clientY - rect.top) * 100 + 50;
                     hanko.play()
-                    isAbleToStamp = false;
+                    NotStamped = false;
                     requestAnimationFrame(draw2); // アニメーションを続ける
                 }
             } catch (e) { alert(e) }
