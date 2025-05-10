@@ -26,7 +26,7 @@ const canvas = document.getElementById('myCanvas');
 const ctx = canvas.getContext('2d');
 
 const hanko = new Audio('投げハンコワイプアウト付き.wav');
-const hako = new Audio('ブレワイ 宝箱 音.wav');
+const hako = new Audio('takarabako.wav');
 const bingo_sound = new Audio('たんたらららーん.mp3');
 const lineLength = 400; // 線の長さ
 const maxSpeed = 5; // 最大スピード
@@ -344,12 +344,12 @@ function convertToNaturalNumber(value) {
     // 100ごとに分けて 1〜4 に変換
     return Math.floor(value / 100);
 }
-if (teacher_name) {
+if (teacher_name) { // canvas_click
     canvas.addEventListener('click', (event) => {
         if (isAbleToStamp && NotStamped) {
             const rect = canvas.getBoundingClientRect(); // canvasの位置とサイズ
-            stamp.x = convertToNaturalNumber(event.clientX - rect.left) * 100 + 50;
-            stamp.y = convertToNaturalNumber(event.clientY - rect.top) * 100 + 50;
+            stamp.x = convertToNaturalNumber((event.clientX - rect.left) / rect.width * 400) * 100 + 50;
+            stamp.y = convertToNaturalNumber((event.clientY - rect.top) / rect.height * 400) * 100 + 50;
             var ok = true;
             load_json().forEach((e) => {
                 if (e.x == stamp.x && e.y == stamp.y) {
