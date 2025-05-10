@@ -1,23 +1,34 @@
 
 const params = new URLSearchParams(window.location.search);
-let teacher_name = params.get('teacher');   // 'apple'
-if (!teacher_name) {
+let teacher_name = params.get('teacher');
+let param_color = params.get('color');
+if (!teacher_name || param_color) {
     requestAnimationFrame(draw)
     requestAnimationFrame(function () {
+        if (param_color) {
+            color_ = param_color;
+            document.querySelector("label.color").innerHTML = class_index.indexOf(param_color);
+            document.querySelector("img.stamp_get").src = `${teacher_name}/${parseInt(document.querySelector('label.color').innerHTML) + 1}.png`
+        }
         stamps = load_json()
         document.querySelector('#stamp_chosing').style.display = "none"
     })
 }
 let pushed = false;
+const color_index = ["赤", "黄色", "青", "緑", "はずれ"]
 const class_index = [
-    "red", "yellow", "blue", "green"
+    "red", "yellow", "blue", "green", "gray"
 ]
 const colors = [
     'rgba(255, 204, 204, 1)',
     'rgba(255, 255, 204, 1)',
     'rgba(204, 204, 255, 1)',
-    'rgba(204, 255, 204, 1)'
+    'rgba(204, 255, 204, 1)',
+    'rgba(204, 204, 204, 1)',
 ];
+const teachers = {
+    "noda": "野田岳志", "hiraku": "比楽朱里", "hayama": "羽山祐樹", "shinba": "新林裕基"
+}
 let index = 0;
 let color_ = null;
 const box = document.querySelector('.grid-container');
@@ -165,7 +176,7 @@ function card_clicked(color) {
         pushed = true
     }
 }
-if (teacher_name) {
+if (teacher_name && !param_color) {
     intervalId = setInterval(() => { // 背景更新
         lastIndex = index
         while (index == lastIndex) {
@@ -387,4 +398,58 @@ overlay.addEventListener('click', () => {
 });
 if (teacher_name) {
     menuButton.style.display = "none";
+}
+
+function showExchangeStamp() {
+    document.querySelector("canvas").style.display = "none";
+    document.querySelector("div.exchange_stamp").style.display = "block";
+    document.querySelector("div.exchange_stamp_list").innerHTML = "読み込み中...";
+    sideMenu.classList.remove('active');
+    overlay.classList.remove('active');
+    fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=getAll")
+        .then(response => response.text()) // 必要に応じて .text() などに変更
+        .then(data => {
+            var div = document.querySelector("div.exchange_stamp_list")
+            var parsed_data = JSON.parse(data);
+            var items = []
+            parsed_data.forEach((item) => {
+                if (item[2] > 0) {
+                    console.log(item)
+                    items.push(item)
+                }
+            })
+            div.innerHTML = ""
+            if (items.length == 0) {
+                div.innerHTML = "取得可能スタンプはありません";
+            }
+            items.forEach((item) => {
+                div.innerHTML = div.innerHTML + `<button onclick="get_stamp('${item[0]}',${item[1]})" class="card stamp_list_button" style="background-color:${colors[item[1] - 1]}">${teachers[item[0]]}<label style="font-size:5px;">先生</label> ${color_index[item[1] - 1]}スタンプ </button><label style="position: relative;top: -30;left: calc(100% - 80px);background-color: rgba(255,255,255,0.5);border-radius: 10px;padding: 5px 6px;">×${item[2]}</label>`
+            })
+        })
+        .catch(error => {
+            alert("エラーが発生しました。\nサーバーが混雑している可能性があります。")
+            console.log(error)
+            location.reload()
+        });
+}
+function get_stamp(item1, item2) {
+    if (confirm(`${teachers[item1]} ${color_index[item2 - 1]} ポイントを消費して交換しますか?`)) {
+
+        document.querySelector("div.exchange_stamp").style.display = "block";
+        fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=takeStamp&teacher_name=" + item1 + "&image_number=" + item2)
+            .then(response => response.text()) // 必要に応じて .text() などに変更
+            .then(data => {
+                if (data) {
+                    location.href = "?teacher=" + item1 + "&color=" + class_index[item2 - 1];
+                } else {
+                    alert("エラーが発生しました。そのスタンプはすでにほかの人に取られています。")
+                    location.reload()
+                }
+            })
+            .catch(error => {
+                alert("エラーが発生しました。\nサーバーが混雑している可能性があります。")
+                console.log(error)
+                location.reload()
+            });
+    }
 }

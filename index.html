@@ -36,6 +36,13 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1)
         }
 
+        .stamp_list_button {
+            width: 80%;
+            display: block;
+            margin: -5 auto;
+            height: 100px;
+        }
+
         .myDialog {
             padding: 20px;
             border: none;
@@ -154,6 +161,10 @@
         .overlay.active {
             display: block;
         }
+
+        div.exchange_stamp {
+            display: none;
+        }
     </style>
     </style>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -193,6 +204,7 @@
     <div class="side-menu" id="sideMenu">
         <ul>
             <li><a href="#" onclick="toMainMenu()" style="color: white;">ホーム</a></li>
+            <li><a href="#" onclick="showExchangeStamp()" style="color: white;">スタンプ交換</a></li>
             <li><a href="#" onclick="reset_button()" style="color: white;">リセット</a></li>
         </ul>
     </div>
@@ -205,6 +217,15 @@
     ">ビンゴ!</h2>
         <label id="bingo_details"></label>
         <button class="button_normal" onclick="toMainMenu()">閉じる</button>
+    </div>
+    <div class="exchange_stamp">
+        <h2 style="
+        width: 100%;
+        text-align: center;
+        font-size: 25px;
+        margin: 30 0;
+    ">スタンプ交換</h2>
+        <div class="exchange_stamp_list"></div>
     </div>
     <div class="overlay" id="overlay"></div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
