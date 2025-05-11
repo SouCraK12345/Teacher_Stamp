@@ -2,9 +2,11 @@
 const params = new URLSearchParams(window.location.search);
 let teacher_name = params.get('teacher');
 let param_color = params.get('color');
+let animation_frame_id = null;
+let selected_exchange_stamp = null;
 if (!teacher_name || param_color) {
-    requestAnimationFrame(draw)
-    requestAnimationFrame(function () {
+    animation_frame_id = requestAnimationFrame(draw)
+    animation_frame_id = requestAnimationFrame(function () {
         if (param_color) {
             color_ = param_color;
             document.querySelector("label.color").innerHTML = class_index.indexOf(param_color);
@@ -127,7 +129,28 @@ function countBingoLinesWithColors(items) {
 
     return { bingoCount, bingoColors }; // ビンゴ列数と色別ビンゴのリスト
 }
+function getRelativePathParts(baseUrl, targetUrl) {
+    const base = new URL(baseUrl);
+    const target = new URL(targetUrl);
 
+    if (base.origin !== target.origin) {
+        throw new Error("異なるオリジンです");
+    }
+
+    let basePath = base.pathname;
+    let targetPath = target.pathname;
+
+    if (!basePath.endsWith("/")) {
+        basePath = basePath.substring(0, basePath.lastIndexOf("/") + 1);
+    }
+
+    let relativePath = targetPath.startsWith(basePath)
+        ? targetPath.substring(basePath.length)
+        : targetPath;
+
+    // "/" で分割し、空文字を除く
+    return relativePath.split("/").filter(part => part.length > 0);
+}
 function toMainMenu() {
     const cleanUrl = window.location.origin + window.location.pathname;
     window.location.replace(cleanUrl);
@@ -147,7 +170,7 @@ if (!load_json()) { // 初期設定
 }
 function reset_button() {
     if (confirm('これまでのデータがすべて削除されます。本当にいいですか?')) {
-        save_json([]);
+        localStorage.clear();
         location.reload();
     }
 }
@@ -215,6 +238,10 @@ function draw(timestamp) { //線を引く + スタンプを出す
     document.querySelector("canvas").style.display = "block"
     if (teacher_name) {
         document.querySelector("div.description2").style.display = "block"
+    } else {
+        document.querySelector("table").style.display = "block";
+        document.querySelector("td.numberOfBingo").innerHTML = localStorage.getItem("bingo");
+        document.querySelector("td.numberOfBingoWithSameColor").innerHTML = localStorage.getItem("bingoc");
     }
 
     for (let i = 0; i < lineStarts.length; i++) {
@@ -278,7 +305,7 @@ function draw(timestamp) { //線を引く + スタンプを出す
     }
     // すべての線が終点に達するまでアニメーションを続ける
     if (x[2] < lineLength) {
-        requestAnimationFrame(draw); // アニメーションを続ける
+        animation_frame_id = requestAnimationFrame(draw); // アニメーションを続ける
     } else {
         if (stamp.frame == 0) {
             isAbleToStamp = true;
@@ -312,6 +339,9 @@ function draw2() { //スタンプ押す
         if (class_index[document.querySelector("label.color").innerHTML] == "yellow") {
             ctx.fillStyle = `rgba(255, 255, 0, ${(stamp.frame - 60) / 120})`;
         }
+        if (class_index[document.querySelector("label.color").innerHTML] == "gray") {
+            ctx.fillStyle = `rgba(0, 0, 0, ${(stamp.frame - 60) / 90})`;
+        }
         if (color_ != class_index[document.querySelector("label.color").innerHTML]) {
             ctx.fillStyle = `rgba(0, 0, 0, ${(stamp.frame - 60) / 90})`;
         }
@@ -320,7 +350,7 @@ function draw2() { //スタンプ押す
     }
     stamp.frame++;
     if (stamp.frame < 91) {
-        requestAnimationFrame(draw2); // アニメーションを続ける
+        animation_frame_id = requestAnimationFrame(draw2); // アニメーションを続ける
     } else {
         var bingoCount = countBingoLinesWithColors(load_json()).bingoCount
         var local_bingocount = localStorage.getItem("bingo")
@@ -370,7 +400,7 @@ if (teacher_name) { // canvas_click
             if (ok) {
                 hanko.play()
                 NotStamped = false;
-                requestAnimationFrame(draw2); // アニメーションを続ける
+                animation_frame_id = requestAnimationFrame(draw2); // アニメーションを続ける
                 var col = class_index[document.querySelector("label.color").innerHTML]
                 if (color_ != col) {
                     col = "gray"
@@ -404,11 +434,15 @@ function showExchangeStamp() {
     document.querySelector("canvas").style.display = "none";
     document.querySelector("div.exchange_stamp").style.display = "block";
     document.querySelector("div.exchange_stamp_list").innerHTML = "読み込み中...";
+    document.querySelector("table").style.display = "none";
+    cancelAnimationFrame(animation_frame_id);
+
     sideMenu.classList.remove('active');
     overlay.classList.remove('active');
     fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=getAll")
         .then(response => response.text()) // 必要に応じて .text() などに変更
         .then(data => {
+            load_json().length > 0 && document.querySelector("div.bottom-box").classList.remove("bottom-transform");
             var div = document.querySelector("div.exchange_stamp_list")
             var parsed_data = JSON.parse(data);
             var items = []
@@ -435,7 +469,7 @@ function showExchangeStamp() {
 function get_stamp(item1, item2) {
     if (confirm(`${teachers[item1]} ${color_index[item2 - 1]} ポイントを消費して交換しますか?`)) {
 
-        document.querySelector("div.exchange_stamp").style.display = "block";
+        document.querySelector("div.exchange_stamp").style.display = "none";
         fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=takeStamp&teacher_name=" + item1 + "&image_number=" + item2)
             .then(response => response.text()) // 必要に応じて .text() などに変更
             .then(data => {
@@ -452,4 +486,51 @@ function get_stamp(item1, item2) {
                 location.reload()
             });
     }
+}
+function show_uploadStamp() {
+    document.querySelector("div.exchange_stamp").style.display = "none";
+    document.querySelector("table").style.display = "none";
+    document.querySelector("body > button.menu-button").style.display = "none";
+    document.querySelector("body > div.description2 > h2").innerHTML = "スタンプをえらべ！";
+    document.querySelector(".description2").style.display = "block";
+    x = [0, 0, 0]; // 3本の線のX座標（進行する位置）
+    speeds = [maxSpeed, maxSpeed, maxSpeed]; // 3本の線の速度
+    draw()
+
+    canvas.addEventListener('click', (event) => {
+        if (!selected_exchange_stamp) {
+            const rect = canvas.getBoundingClientRect(); // canvasの位置とサイズ
+            const x = convertToNaturalNumber((event.clientX - rect.left) / rect.width * 400) * 100 + 50;
+            const y = convertToNaturalNumber((event.clientY - rect.top) / rect.height * 400) * 100 + 50;
+            var ok = false;
+            var path = false;
+            let count = 0;
+            load_json().forEach((e) => {
+                if (e.x == x && e.y == y) {
+                    ok = count + 1;
+                    path = e.path;
+                }
+                count++
+            })
+            var tn = teachers[getRelativePathParts(location.href, path)[0]]
+            var cl = color_index[parseInt(getRelativePathParts(location.href, path)[1][0] - 1)]
+            if (ok && confirm(`${tn} ${cl} このデバイスからスタンプが消えます。本当にいいですか？`)) {
+                selected_exchange_stamp = true;
+                var json = load_json()
+                json.splice(ok -1, 1)
+
+                fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=addStamp&teacher_name=" + getRelativePathParts(location.href, path)[0] + "&image_number=" + getRelativePathParts(location.href, path)[1][0])
+                    .then(response => response.text()) // 必要に応じて .text() などに変更
+                    .then(data => {
+                        location.reload()
+                        save_json(json);
+                    })
+                    .catch(error => {
+                        alert("エラーが発生しました。\nサーバーが混雑している可能性があります。")
+                        console.log(error)
+                        location.reload()
+                    });
+            }
+        }
+    });
 }

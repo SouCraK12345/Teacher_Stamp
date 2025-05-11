@@ -165,6 +165,36 @@
         div.exchange_stamp {
             display: none;
         }
+
+        table {
+            border-collapse: collapse;
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translate(-50%, 0);
+        }
+
+        td {
+            vertical-align: middle;
+            padding: 4px 8px;
+            line-height: 1.5;
+        }
+
+        .bottom-box {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            border: 1px solid #000;
+            box-sizing: border-box;
+            transition-duration: 500ms;
+        }
+
+        .bottom-transform {
+            transform: translate(0, 100px);
+        }
     </style>
     </style>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -199,6 +229,17 @@
     <button class="button_normal toMainMenu" style=" width:300px;position: absolute;left: calc(50% -
         150px);bottom:10%;display:none;" onclick="toMainMenu()">閉じる</button>
     <canvas id="myCanvas" width="400" height="400"></canvas>
+    <table hidden>
+        <tr>
+            <td>ビンゴ:</td>
+            <td class="numberOfBingo">0</td>
+        </tr>
+        <tr>
+            <td>同色ボーナス:</td>
+            <td class="numberOfBingoWithSameColor">0</td>
+        </tr>
+    </table>
+
 
     <button class="menu-button">メニュー</button>
     <div class="side-menu" id="sideMenu">
@@ -226,6 +267,11 @@
         margin: 30 0;
     ">スタンプ交換</h2>
         <div class="exchange_stamp_list"></div>
+        <div class="bottom-box bottom-transform">
+            <label style="text-align: center; width:100%; margin-top:10px;display:block;">いらないスタンプをアップロードしよう!</label>
+            <button class="button_normal" style="margin:5px auto;width:80%;display:block;"
+                onclick="show_uploadStamp()">アップロード</button>
+        </div>
     </div>
     <div class="overlay" id="overlay"></div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
