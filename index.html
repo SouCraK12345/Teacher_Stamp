@@ -235,31 +235,32 @@
     <button class="button_normal toMainMenu" style=" width:300px;position: absolute;left: calc(50% -
         150px);bottom:10%;display:none;" onclick="toMainMenu()">閉じる</button>
     <canvas id="myCanvas" width="400" height="400"></canvas>
-    <table class="left" hidden>
-        <tr>
-            <td>ビンゴ:</td>
-            <td class="numberOfBingo">0</td>
-        </tr>
-        <tr>
-            <td>同色ボーナス:</td>
-            <td class="numberOfBingoWithSameColor">0</td>
-        </tr>
-        <tr>
-            <td>最大ビンゴ数:</td>
-            <td class="maxNumberOfBingo">0</td>
-        </tr>
-        <tr>
-            <td>最大同色ボーナス:</td>
-            <td class="maxNumberOfBingoWithSameColor">0</td>
-        </tr>
-    </table>
-    <table class="right">
-        <tr>
-            <td><img src="coin.png" alt="おカネ" style="height:80px;"></td>
-            <td class="coin">0</td>
-        </tr>
-    </table>
-
+    <div class="table-div" hidden>
+        <table class="left">
+            <tr>
+                <td>ビンゴ:</td>
+                <td class="numberOfBingo">0</td>
+            </tr>
+            <tr>
+                <td>同色ボーナス:</td>
+                <td class="numberOfBingoWithSameColor">0</td>
+            </tr>
+            <tr>
+                <td>最大ビンゴ数:</td>
+                <td class="maxNumberOfBingo">0</td>
+            </tr>
+            <tr>
+                <td>最大同色ボーナス:</td>
+                <td class="maxNumberOfBingoWithSameColor">0</td>
+            </tr>
+        </table>
+        <table class="right">
+            <tr>
+                <td><img src="coin.png" alt="おカネ" style="height:80px;"></td>
+                <td class="coin">0</td>
+            </tr>
+        </table>
+    </div>
     <button class="menu-button">メニュー</button>
     <div class="side-menu" id="sideMenu">
         <ul>
