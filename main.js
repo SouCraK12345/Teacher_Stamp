@@ -221,7 +221,7 @@ function draw(timestamp) { //線を引く + スタンプを出す
     if (teacher_name) {
         document.querySelector("div.description2").style.display = "block"
     } else {
-        document.querySelector("table").style.display = "block";
+        document.querySelectorAll("table").forEach((e)=>{e.style.display = "block";});
         document.querySelector("td.numberOfBingo").innerHTML = localStorage.getItem("bingo");
         document.querySelector("td.numberOfBingoWithSameColor").innerHTML = localStorage.getItem("bingoc");
         document.querySelector("td.maxNumberOfBingo").innerHTML = localStorage.getItem("mbingo");
@@ -423,7 +423,7 @@ function showExchangeStamp() {
     document.querySelector("canvas").style.display = "none";
     document.querySelector("div.exchange_stamp").style.display = "block";
     document.querySelector("div.exchange_stamp_list").innerHTML = "読み込み中...";
-    document.querySelector("table").style.display = "none";
+    document.querySelectorAll("table").forEach((e)=>{e.style.display = "block";});
     cancelAnimationFrame(animation_frame_id);
 
     sideMenu.classList.remove('active');
@@ -492,7 +492,7 @@ function get_stamp(item1, item2) {
 }
 function show_uploadStamp() {
     document.querySelector("div.exchange_stamp").style.display = "none";
-    document.querySelector("table").style.display = "none";
+    document.querySelectorAll("table").forEach((e)=>{e.style.display = "none";});
     document.querySelector("body > button.menu-button").style.display = "none";
     document.querySelector("body > div.description2 > h2").innerHTML = "スタンプをえらべ！";
     document.querySelector(".description2").style.display = "block";
