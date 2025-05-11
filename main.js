@@ -360,7 +360,7 @@ function draw2() { //スタンプ押す
                 localStorage.setItem("bingoc", countBingoLinesWithColors(load_json()).bingoColors.length)
                 localStorage.getItem("mbingo") < localStorage.getItem("bingo") && localStorage.setItem("mbingo", localStorage.getItem("bingo"))
                 localStorage.getItem("mbingoc") < localStorage.getItem("bingoc") && localStorage.setItem("mbingoc", localStorage.getItem("bingoc"))
-                fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=setRanking&value=" + parseInt(localStorage.getItem("mbingo") + localStorage.getItem("mbingoc")) + "&name=" + localStorage.getItem("name"))
+                fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=setRanking&value=" + parseInt(parseInt(localStorage.getItem("mbingo")) + parseInt(localStorage.getItem("mbingoc"))) + "&name=" + localStorage.getItem("name"))
                     .then(response => response.text()) // 必要に応じて .text() などに変更
                     .then(data => {
                     })
