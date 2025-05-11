@@ -1,21 +1,4 @@
-
 const params = new URLSearchParams(window.location.search);
-let teacher_name = params.get('teacher');
-let param_color = params.get('color');
-let animation_frame_id = null;
-let selected_exchange_stamp = null;
-if (!teacher_name || param_color) {
-    animation_frame_id = requestAnimationFrame(draw)
-    animation_frame_id = requestAnimationFrame(function () {
-        if (param_color) {
-            color_ = param_color;
-            document.querySelector("label.color").innerHTML = class_index.indexOf(param_color);
-            document.querySelector("img.stamp_get").src = `${teacher_name}/${parseInt(document.querySelector('label.color').innerHTML) + 1}.png`
-        }
-        stamps = load_json()
-        document.querySelector('#stamp_chosing').style.display = "none"
-    })
-}
 let pushed = false;
 const color_index = ["赤", "黄色", "青", "緑", "はずれ"]
 const class_index = [
@@ -31,6 +14,10 @@ const colors = [
 const teachers = {
     "noda": "野田岳志", "hiraku": "比楽朱里", "hayama": "羽山祐樹", "shinba": "新林裕基"
 }
+let teacher_name = params.get('teacher');
+let param_color = params.get('color');
+let animation_frame_id = null;
+let selected_exchange_stamp = null;
 let index = 0;
 let color_ = null;
 const box = document.querySelector('.grid-container');
@@ -163,11 +150,6 @@ function load_json(key = "json") {
     const jsonData = localStorage.getItem(key);
     return jsonData ? JSON.parse(jsonData) : null;
 }
-if (!load_json()) { // 初期設定
-    save_json([]);
-    localStorage.setItem("bingo", 0)
-    localStorage.setItem("bingoc", 0)
-}
 function reset_button() {
     if (confirm('これまでのデータがすべて削除されます。本当にいいですか?')) {
         localStorage.clear();
@@ -242,6 +224,8 @@ function draw(timestamp) { //線を引く + スタンプを出す
         document.querySelector("table").style.display = "block";
         document.querySelector("td.numberOfBingo").innerHTML = localStorage.getItem("bingo");
         document.querySelector("td.numberOfBingoWithSameColor").innerHTML = localStorage.getItem("bingoc");
+        document.querySelector("td.maxNumberOfBingo").innerHTML = localStorage.getItem("mbingo");
+        document.querySelector("td.maxNumberOfBingoWithSameColor").innerHTML = localStorage.getItem("mbingoc");
     }
 
     for (let i = 0; i < lineStarts.length; i++) {
@@ -368,13 +352,18 @@ function draw2() { //スタンプ押す
             setTimeout(() => {
                 document.querySelector("div.bingo").classList.add("show");
                 bingo_sound.play()
-                document.querySelector("#bingo_details").innerHTML = `ビンゴ: ${bingo}pt<br>同色スタンプボーナス: ${color}pt`
+                console.log(bingoCount, bingoColors)
+                document.querySelector("#bingo_details").innerHTML = `ビンゴ: ${-parseInt(localStorage.getItem("mbingo")) + bingoCount}pt<br>同色スタンプボーナス: ${-parseInt(localStorage.getItem("mbingoc")) + bingoColors}pt`
+                localStorage.setItem("coin", parseInt(localStorage.getItem("coin")) + (-parseInt(localStorage.getItem("mbingo")) + bingoCount - parseInt(localStorage.getItem("mbingoc")) + bingoColors) * 100)
+
+                localStorage.setItem("bingo", countBingoLinesWithColors(load_json()).bingoCount)
+                localStorage.setItem("bingoc", countBingoLinesWithColors(load_json()).bingoColors.length)
+                localStorage.getItem("mbingo") < localStorage.getItem("bingo") && localStorage.setItem("mbingo", localStorage.getItem("bingo"))
+                localStorage.getItem("mbingoc") < localStorage.getItem("bingoc") && localStorage.setItem("mbingoc", localStorage.getItem("bingoc"))
             }, 1000)
         } else {
             document.querySelector(".toMainMenu").style.display = "block";
         }
-        localStorage.setItem("bingo", countBingoLinesWithColors(load_json()).bingoCount)
-        localStorage.setItem("bingoc", countBingoLinesWithColors(load_json()).bingoColors.length)
     }
 }
 function convertToNaturalNumber(value) {
@@ -467,13 +456,27 @@ function showExchangeStamp() {
         });
 }
 function get_stamp(item1, item2) {
-    if (confirm(`${teachers[item1]} ${color_index[item2 - 1]} ポイントを消費して交換しますか?`)) {
+    var continue_ = false;
+    load_json().forEach((e) => {
+        let tn = getRelativePathParts(location.href, e.path)[0];
+        if (tn == item1) {
+            alert("すでにそのスタンプは交換済みです");
+            continue_ = true;
+        }
+    })
+    if (localStorage.getItem("coin") < 100) {
+        alert("おカネが足りません")
+        continue_ = true;
+    }
+    if (continue_) { return false; }
+    if (confirm(`${teachers[item1]} ${color_index[item2 - 1]} 100ポイント消費して交換しますか?`)) {
 
         document.querySelector("div.exchange_stamp").style.display = "none";
         fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=takeStamp&teacher_name=" + item1 + "&image_number=" + item2)
             .then(response => response.text()) // 必要に応じて .text() などに変更
             .then(data => {
                 if (data) {
+                    localStorage.setItem("coin", parseInt(localStorage.getItem("coin")) - 100);
                     location.href = "?teacher=" + item1 + "&color=" + class_index[item2 - 1];
                 } else {
                     alert("エラーが発生しました。そのスタンプはすでにほかの人に取られています。")
@@ -515,9 +518,10 @@ function show_uploadStamp() {
             var tn = teachers[getRelativePathParts(location.href, path)[0]]
             var cl = color_index[parseInt(getRelativePathParts(location.href, path)[1][0] - 1)]
             if (ok && confirm(`${tn} ${cl} このデバイスからスタンプが消えます。本当にいいですか？`)) {
+                localStorage.setItem("coin", parseInt(localStorage.getItem("coin")) + 50)
                 selected_exchange_stamp = true;
                 var json = load_json()
-                json.splice(ok -1, 1)
+                json.splice(ok - 1, 1)
 
                 fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=addStamp&teacher_name=" + getRelativePathParts(location.href, path)[0] + "&image_number=" + getRelativePathParts(location.href, path)[1][0])
                     .then(response => response.text()) // 必要に応じて .text() などに変更
@@ -533,4 +537,43 @@ function show_uploadStamp() {
             }
         }
     });
+}
+
+
+// main
+if (!load_json()) { // 初期設定
+    save_json([]);
+    localStorage.setItem("bingo", 0)
+    localStorage.setItem("bingoc", 0)
+    localStorage.setItem("mbingo", 0)
+    localStorage.setItem("mbingoc", 0)
+    localStorage.setItem("coin", 0)
+}
+
+localStorage.setItem("bingo", countBingoLinesWithColors(load_json()).bingoCount)
+localStorage.setItem("bingoc", countBingoLinesWithColors(load_json()).bingoColors.length)
+localStorage.getItem("mbingo") < localStorage.getItem("bingo") && localStorage.setItem("mbingo", localStorage.getItem("bingo"))
+localStorage.getItem("mbingoc") < localStorage.getItem("bingoc") && localStorage.setItem("mbingoc", localStorage.getItem("bingoc"))
+document.querySelector(".coin").innerHTML = localStorage.getItem("coin")
+if (!teacher_name || param_color) {
+    animation_frame_id = requestAnimationFrame(draw)
+    animation_frame_id = requestAnimationFrame(function () {
+        if (param_color) {
+            color_ = param_color;
+            document.querySelector("label.color").innerHTML = class_index.indexOf(param_color);
+            document.querySelector("img.stamp_get").src = `${teacher_name}/${parseInt(document.querySelector('label.color').innerHTML) + 1}.png`
+        }
+        stamps = load_json()
+        document.querySelector('#stamp_chosing').style.display = "none"
+    })
+}
+
+if (teacher_name) {
+    load_json().forEach((e) => {
+        let tn = getRelativePathParts(location.href, e.path)[0];
+        if (tn == teacher_name) {
+            alert("すでにそのスタンプは交換済みです");
+            toMainMenu();
+        }
+    })
 }
