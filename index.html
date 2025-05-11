@@ -104,7 +104,7 @@
 
         body {
             margin: 0;
-            font-family: sans-serif;
+            font-family: "UD デジタル 教科書体 N-B", sans-serif;
         }
 
         .menu-button {
@@ -166,7 +166,7 @@
             display: none;
         }
 
-        table {
+        table.data-table {
             border-collapse: collapse;
             position: absolute;
             bottom: 5px;
@@ -201,6 +201,44 @@
 
         .bottom-transform {
             transform: translate(0, 100px);
+        }
+
+
+
+        .table-wrapper {
+            overflow-y: auto;
+            /* 縦スクロール */
+            overflow-x: hidden;
+            /* 横スクロール不要なら非表示 */
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            scroll-behavior: smooth;
+            /* なめらかスクロール（オプション） */
+        }
+
+        table.simple-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+        }
+
+        table.simple-table th,
+        table.simple-table td {
+            padding: 12px 20px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table.simple-table th {
+            background-color: #4CAF50;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        table.simple-table tr:hover {
+            background-color: #f1f1f1;
         }
     </style>
     </style>
@@ -237,7 +275,7 @@
         150px);bottom:10%;display:none;" onclick="toMainMenu()">閉じる</button>
     <canvas id="myCanvas" width="400" height="400"></canvas>
     <div class="table-div" hidden>
-        <table class="left">
+        <table class="left data-table">
             <tr>
                 <td>ビンゴ:</td>
                 <td class="numberOfBingo">0</td>
@@ -255,7 +293,7 @@
                 <td class="maxNumberOfBingoWithSameColor">0</td>
             </tr>
         </table>
-        <table class="right">
+        <table class="right data-table">
             <tr>
                 <td><img src="coin.png" alt="おカネ" style="height:80px;"></td>
                 <td class="coin">0</td>
@@ -267,6 +305,7 @@
         <ul>
             <li><a href="#" onclick="toMainMenu()" style="color: white;">ホーム</a></li>
             <li><a href="#" onclick="showExchangeStamp()" style="color: white;">スタンプ交換</a></li>
+            <li><a href="#" onclick="showRanking()" style="color: white;">ランキング</a></li>
             <li><a href="#" onclick="reset_button()" style="color: white;">リセット</a></li>
         </ul>
     </div>
@@ -295,6 +334,15 @@
         </div>
     </div>
     <div class="overlay" id="overlay"></div>
+    <div class="ranking" hidden>
+        <h2 style="
+        width: 100%;
+        text-align: center;
+        font-size: 25px;
+        margin: 30 0;
+    ">ランキング</h2>
+        <div class="bingo-ranking table-wrapper"></div>
+    </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="main.js">
     </script>

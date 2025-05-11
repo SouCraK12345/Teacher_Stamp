@@ -360,6 +360,12 @@ function draw2() { //スタンプ押す
                 localStorage.setItem("bingoc", countBingoLinesWithColors(load_json()).bingoColors.length)
                 localStorage.getItem("mbingo") < localStorage.getItem("bingo") && localStorage.setItem("mbingo", localStorage.getItem("bingo"))
                 localStorage.getItem("mbingoc") < localStorage.getItem("bingoc") && localStorage.setItem("mbingoc", localStorage.getItem("bingoc"))
+                fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=setRanking&value=" + parseInt(localStorage.getItem("mbingo") + localStorage.getItem("mbingoc")) + "&name=" + localStorage.getItem("name"))
+                    .then(response => response.text()) // 必要に応じて .text() などに変更
+                    .then(data => {
+                    })
+                    .catch(error => {
+                    });
             }, 1000)
         } else {
             document.querySelector(".toMainMenu").style.display = "block";
@@ -538,6 +544,80 @@ function show_uploadStamp() {
         }
     });
 }
+function scrollToElementSmooth(selector, duration = 1000, offset = 0) {
+    const element = document.querySelector(selector);
+    if (!element) {
+        console.warn('要素が見つかりません:', selector);
+        return;
+    }
+
+    const targetPosition = element.getBoundingClientRect().top + window.pageYOffset + offset;
+    const startPosition = window.pageYOffset;
+    const distance = targetPosition - startPosition;
+    let startTime = null;
+
+    function animation(currentTime) {
+        if (startTime === null) startTime = currentTime;
+        const timeElapsed = currentTime - startTime;
+        const run = easeInOutQuad(timeElapsed, startPosition, distance, duration);
+        window.scrollTo(0, run);
+        if (timeElapsed < duration) {
+            requestAnimationFrame(animation);
+        }
+    }
+
+    // イージング関数（動きが自然になる）
+    function easeInOutQuad(t, b, c, d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t + b;
+        t--;
+        return -c / 2 * (t * (t - 2) - 1) + b;
+    }
+
+    requestAnimationFrame(animation);
+}
+
+function showRanking() {
+    document.querySelector("canvas").style.display = "none";
+    document.querySelector(".table-div").style.display = "none";
+    document.querySelector("div.ranking").style.display = "block";
+    document.querySelector(".bingo-ranking").innerHTML = "読み込み中..."
+    cancelAnimationFrame(animation_frame_id);
+
+    sideMenu.classList.remove('active');
+    overlay.classList.remove('active');
+    fetch("https://script.google.com/macros/s/AKfycbwXo5sqgN4XttFXp4dAv15XzdDHYGNGzZ3Ixeb2bPLtUUZMfjLUcR1F2sYI243ZgY93bQ/exec?type=getAllofRanking")
+        .then(response => response.text()) // 必要に応じて .text() などに変更
+        .then(data => {
+            var div = document.querySelector("div.bingo-ranking")
+            var items = JSON.parse(data);
+            var innerHTML = `<table class="simple-table"><thead><tr><th>順位</th><th>名前</th><th>ポイント</th></tr></thead><tbody>`
+            var count = 0
+            var rank = 0;
+            items.forEach((item) => {
+                count++
+                if (item[0] == localStorage.getItem("name")) {
+                    rank = count;
+                    innerHTML = innerHTML + `<tr style="background-color:#ffc069;"><td data-label="順位" class="no${count}">${count}</td><td data-label="名前">${item[0]}</td><td data-label="ポイント">${item[1]}</td></tr>`
+
+                } else {
+                    innerHTML = innerHTML + `<tr><td data-label="順位" class="no${count}">${count}</td><td data-label="名前">${item[0]}</td><td data-label="ポイント">${item[1]}</td></tr>`
+                }
+            })
+            innerHTML = innerHTML + `</tbody></table>`
+            if (items.length == 0) {
+                innerHTML = "ランキングがありません";
+            }
+            div.innerHTML = innerHTML;
+            window.scroll(0, document.documentElement.clientHeight);
+            scrollToElementSmooth(".no" + rank, 3000, -300)
+        })
+        .catch(error => {
+            alert("エラーが発生しました。\nサーバーが混雑している可能性があります。")
+            console.log(error)
+            location.reload()
+        });
+}
 
 
 // main
@@ -548,6 +628,11 @@ if (!load_json()) { // 初期設定
     localStorage.setItem("mbingo", 0)
     localStorage.setItem("mbingoc", 0)
     localStorage.setItem("coin", 0)
+    var name_ = prompt("名前を入力してください")
+    while (!confirm("ほんとに これでいいの・・・？ \n「" + name_ + "」")) {
+        name_ = prompt("名前を入力してください")
+    }
+    localStorage.setItem("name", name_)
 }
 
 localStorage.setItem("bingo", countBingoLinesWithColors(load_json()).bingoCount)
