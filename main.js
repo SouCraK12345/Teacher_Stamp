@@ -12,7 +12,7 @@ const colors = [
     'rgba(204, 204, 204, 1)',
 ];
 const teachers = {
-    "noda": "野田岳志", "hiraku": "比楽朱里", "hayama": "羽山祐樹", "shinba": "新林裕基","nakano":"中野千世乃","shimode":"下出千晴","hashiguchi":"橋口尚弘","matsunaga":"松永裕貴","seita":"清田","shimogaki":"下垣恵理香","ito":"伊藤慶孝"
+    "noda": "野田岳志", "hiraku": "比楽朱里", "hayama": "羽山祐樹", "shinba": "新林裕基","kawabe":"川辺美帆","shimode":"下出千晴","hashiguchi":"橋口尚弘","matsunaga":"松永裕貴","seita":"清田","shimogaki":"下垣恵理香","ito":"伊藤慶孝"
 }
 let teacher_name = params.get('teacher');
 let param_color = params.get('color');
